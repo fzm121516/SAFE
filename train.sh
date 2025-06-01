@@ -38,7 +38,7 @@ do
             --weight_decay 0.01 \
             --warmup_epochs 1 \
             --epochs 20 \
-            --num_workers 16 \
+            --num_workers 1 \
             --output_dir $OUTPUT_PATH \
         2>&1 | tee -a $OUTPUT_PATH/log_train.txt
     done
