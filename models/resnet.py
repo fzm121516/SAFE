@@ -196,7 +196,16 @@ class ResNet(nn.Module):
 
     def forward(self, x):
 
-        x = 1 * self._preprocess_dwt(x)
+
+        import torch
+
+        # 假设 x 和 y 的维度都是 [B, C, H, W]
+        y = 1 * self._preprocess_dwt(x)
+        z = 1 * self._preprocess_NPR(x)
+
+        # 在通道维度上拼接
+        x = torch.cat([y, z], dim=1)  # [B, C_y + C_z, H, W]
+
 
         x = self.conv1(x)
         x = self.bn1(x)
