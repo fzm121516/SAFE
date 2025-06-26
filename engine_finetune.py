@@ -55,7 +55,8 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
                 loss = criterion(output, targets)
         else: # full precision
             output = model(samples)
-            loss = criterion(output, targets)
+            # loss = criterion(output, targets)
+            loss = criterion(output.squeeze(1), targets.float())  # 关键：targets.float()  # 将 output 从 [32, 1] 变成 [32]
 
         loss_value = loss.item()
 
@@ -86,7 +87,9 @@ def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
         torch.cuda.synchronize()
 
         if mixup_fn is None:
-            class_acc = (output.max(-1)[-1] == targets).float().mean()
+            pred = (torch.sigmoid(output) > 0.5).long()  # 预测类别
+            class_acc = (pred == targets).float().mean()  # 计算准确率
+            # class_acc = (output.max(-1)[-1] == targets).float().mean()
         else:
             class_acc = None
 
@@ -152,7 +155,11 @@ def evaluate(data_loader, model, device, val=None, use_amp=False):
             if isinstance(output, dict):
                 output = output['logits']
             
+
+            output=output.squeeze(1)
+            target=target.float()
             loss = criterion(output, target)
+
         
         if index == 0:
             predictions = output
@@ -163,7 +170,10 @@ def evaluate(data_loader, model, device, val=None, use_amp=False):
 
         torch.cuda.synchronize()
 
-        acc1, _ = [acc / 100 for acc in accuracy(output, target, topk=(1, 2))]
+        probs = torch.sigmoid(output)  # tensor([0.55, 0.27, 0.88])
+        pred = (probs > 0.5).long()    # tensor([1, 0, 1])
+        acc1 = (pred == target).float().mean()  # tensor(0.6667) → 66.67% 准确率
+        # acc1, _ = [acc / 100 for acc in accuracy(output, target, topk=(1,2))]
 
         batch_size = images.shape[0]
         metric_logger.update(loss=loss.item())
@@ -180,8 +190,9 @@ def evaluate(data_loader, model, device, val=None, use_amp=False):
 
     output_all = torch.concat(output_ddp, dim=0)
     labels_all = torch.concat(labels_ddp, dim=0)
-
-    y_pred = softmax(output_all.detach().cpu().numpy(), axis=1)[:, 1]
+    
+    y_pred = torch.sigmoid(output_all.detach().cpu()).numpy()
+    # y_pred = softmax(output_all.detach().cpu().numpy(), axis=1)[:, 1]
     y_true = labels_all.detach().cpu().numpy()
     y_true = y_true.astype(int)
   

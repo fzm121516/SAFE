@@ -86,7 +86,7 @@ def get_args_parser():
         weight decay. We use a cosine schedule for WD and using a larger decay by
         the end of training improves performance for ViTs.""")
 
-    parser.add_argument('--smoothing', type=float, default=0.1, help='Label smoothing (default: 0.1)')
+    parser.add_argument('--smoothing', type=float, default=0, help='Label smoothing (default: 0.1)')
 
     # Mixup params
     parser.add_argument('--mixup', type=float, default=0.,
@@ -252,7 +252,8 @@ def main(args):
 
     # Init Model
     if args.model == 'SAFE':
-        model = resnet50(num_classes=2)
+        # model = resnet50(num_classes=2)
+        model = resnet50(num_classes=1)
     else:
         model = timm.create_model(args.model, pretrained=args.pretrained, num_classes=2)
     model.to(device)
