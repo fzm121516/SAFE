@@ -1,4 +1,4 @@
-export CUDA_VISIBLE_DEVICES=5
+export CUDA_VISIBLE_DEVICES=4
 GPU_NUM=1
 WORLD_SIZE=1
 RANK=0
@@ -40,7 +40,7 @@ do
             --weight_decay 0.01 \
             --warmup_epochs 1 \
             --epochs 20 \
-            --num_workers 1 \
+            --num_workers 4 \
             --output_dir $OUTPUT_PATH \
         2>&1 | tee -a $OUTPUT_PATH/log_train.txt
     done
